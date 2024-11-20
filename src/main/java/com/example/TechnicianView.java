@@ -1,137 +1,100 @@
 package com.example;
-import javafx.geometry.HPos;
-import javafx.geometry.Pos;
-import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+
 import javafx.scene.layout.GridPane;
-import javafx.stage.Stage;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import javafx.scene.control.Button;
+import javafx.scene.control.TextField;
+import javafx.scene.control.Label;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.layout.Pane;
 
 public class TechnicianView {
+    private final GridPane root;
+    private final Controller controller;
 
-    public void start(Stage stage) {
-        stage.setTitle("CT Scan Technician View");
+    public TechnicianView(Controller controller) {
+        this.controller = controller;
 
-        // Create a GridPane layout
-        GridPane grid = new GridPane();
-        grid.setHgap(10);
-        grid.setVgap(10);
-        grid.setAlignment(Pos.CENTER);
+        // Initialize the layout
+        root = new GridPane();
+        root.setAlignment(Pos.CENTER);
+        root.setHgap(10); // Horizontal gap between columns
+        root.setVgap(10); // Vertical gap between rows
+        root.setPadding(new Insets(20, 20, 20, 20)); // Padding around the grid
 
-        // Labels and TextFields for Technician data input
-        Label patientIDLabel = new Label("Patient ID:");
-        TextField patientIDField = new TextField();
+        // Create UI elements
+        Label titleLabel = new Label("Technician View");
+        titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
 
-        Label agatstonScoreLabel = new Label("The total Agatston CAC score:");
-        TextField agatstonScoreField = new TextField();
+        Label patientIdLabel = new Label("Patient ID:");
+        TextField patientIdField = new TextField();
 
-        Label vesselScoreLabel = new Label("Vessel level Agatston CAC score");
+        Label totalCACLabel = new Label("The total Agatston CAC score:");
+        TextField totalCACField = new TextField();
+
+        Label vesselLabel = new Label("Vessel level Agatston CAC score:");
         Label lmLabel = new Label("LM:");
         TextField lmField = new TextField();
-
         Label ladLabel = new Label("LAD:");
         TextField ladField = new TextField();
-
         Label lcxLabel = new Label("LCX:");
         TextField lcxField = new TextField();
-
         Label rcaLabel = new Label("RCA:");
         TextField rcaField = new TextField();
-
         Label pdaLabel = new Label("PDA:");
         TextField pdaField = new TextField();
 
-        // Save Button
         Button saveButton = new Button("Save");
-        styleButton(saveButton);
+        saveButton.setStyle("-fx-background-color: #4a90e2; -fx-text-fill: white; -fx-font-size: 14px; "
+                + "-fx-font-weight: bold; -fx-border-radius: 5; -fx-background-radius: 5; -fx-pref-height: 30px;");
+        Label messageLabel = new Label();
 
+        // Add elements to the grid layout
+        root.add(titleLabel, 0, 0, 2, 1); // Title spans two columns
+        root.add(patientIdLabel, 0, 1);
+        root.add(patientIdField, 1, 1);
+        root.add(totalCACLabel, 0, 2);
+        root.add(totalCACField, 1, 2);
+        root.add(vesselLabel, 0, 3, 2, 1); // Label spans two columns
+        root.add(lmLabel, 0, 4);
+        root.add(lmField, 1, 4);
+        root.add(ladLabel, 0, 5);
+        root.add(ladField, 1, 5);
+        root.add(lcxLabel, 0, 6);
+        root.add(lcxField, 1, 6);
+        root.add(rcaLabel, 0, 7);
+        root.add(rcaField, 1, 7);
+        root.add(pdaLabel, 0, 8);
+        root.add(pdaField, 1, 8);
+        root.add(saveButton, 1, 9);
+        root.add(messageLabel, 0, 10, 2, 1); // Message spans two columns
+
+        // Handle saving CT scan data
         saveButton.setOnAction(e -> {
-            String patientID = patientIDField.getText();
-            if (validateInputs(patientIDField, agatstonScoreField, lmField, ladField, lcxField, rcaField, pdaField)) {
-                if (patientExists(patientID)) {
-                    saveScanData(patientID, agatstonScoreField.getText(),
-                            lmField.getText(), ladField.getText(), lcxField.getText(), rcaField.getText(), pdaField.getText());
+            try {
+                String patientId = patientIdField.getText();
+                int totalCACScore = Integer.parseInt(totalCACField.getText());
+                int[] vesselScores = {
+                        Integer.parseInt(lmField.getText()),
+                        Integer.parseInt(ladField.getText()),
+                        Integer.parseInt(lcxField.getText()),
+                        Integer.parseInt(rcaField.getText()),
+                        Integer.parseInt(pdaField.getText())
+                };
+
+                if (controller.recordCTScan(patientId, totalCACScore, vesselScores)) {
+                    messageLabel.setText("Scan recorded successfully!");
                 } else {
-                    showAlert("Patient ID does not exist.");
+                    messageLabel.setText("Failed to record scan. Please try again.");
                 }
+            } catch (NumberFormatException ex) {
+                messageLabel.setText("Please enter valid numeric values for scores.");
             }
         });
-
-        // Add nodes to grid
-        grid.add(patientIDLabel, 0, 0);
-        grid.add(patientIDField, 1, 0);
-
-        grid.add(agatstonScoreLabel, 0, 1);
-        grid.add(agatstonScoreField, 1, 1);
-
-        grid.add(vesselScoreLabel, 0, 2, 2, 1); // Span across two columns for header
-        grid.add(lmLabel, 0, 3);
-        grid.add(lmField, 1, 3);
-
-        grid.add(ladLabel, 0, 4);
-        grid.add(ladField, 1, 4);
-
-        grid.add(lcxLabel, 0, 5);
-        grid.add(lcxField, 1, 5);
-
-        grid.add(rcaLabel, 0, 6);
-        grid.add(rcaField, 1, 6);
-
-        grid.add(pdaLabel, 0, 7);
-        grid.add(pdaField, 1, 7);
-
-        grid.add(saveButton, 1, 8);
-        GridPane.setHalignment(saveButton, HPos.RIGHT); // Align Save button to the right
-
-        Scene scene = new Scene(grid, 500, 500);
-        stage.setScene(scene);
-        stage.show();
     }
 
-    private void styleButton(Button button) {
-        button.setStyle("-fx-background-color: #4169E1; -fx-text-fill: white; -fx-padding: 5 15 5 15;");
-    }
-
-    private boolean validateInputs(TextField... fields) {
-        for (TextField field : fields) {
-            if (field.getText().isEmpty()) {
-                showAlert("Please fill out all fields.");
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private boolean patientExists(String patientID) {
-        File patientFile = new File(patientID + "_PatientInfo.txt");
-        return patientFile.exists();
-    }
-
-    private void saveScanData(String patientID, String agatstonScore, String lm, String lad, String lcx, String rca, String pda) {
-        String fileName = patientID + "CTResults.txt";
-        try (FileWriter writer = new FileWriter(fileName)) {
-            writer.write("Patient ID: " + patientID + "\n");
-            writer.write("Total Agatston CAC score: " + agatstonScore + "\n");
-            writer.write("LM: " + lm + "\n");
-            writer.write("LAD: " + lad + "\n");
-            writer.write("LCX: " + lcx + "\n");
-            writer.write("RCA: " + rca + "\n");
-            writer.write("PDA: " + pda + "\n");
-            showAlert("CT scan data saved successfully!");
-        } catch (IOException e) {
-            e.printStackTrace();
-            showAlert("An error occurred while saving the CT scan data.");
-        }
-    }
-
-    private void showAlert(String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setContentText(message);
-        alert.show();
+    // Get the root layout for the view
+    public Pane getRoot() {
+        return root;
     }
 }

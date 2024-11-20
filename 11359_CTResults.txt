@@ -1,0 +1,7 @@
+Patient ID: 11359
+Total CAC Score: 0
+LM: 0
+LAD: 0
+LCX: 0
+RCA: 0
+PDA: 0

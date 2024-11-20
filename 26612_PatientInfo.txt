@@ -1,0 +1,7 @@
+Patient ID: 26612
+First Name: Shyam
+Last Name: C
+Email: shyam@gmail.com
+Phone Number: 123-456-7896
+Health History: bad
+Insurance ID: 12345
